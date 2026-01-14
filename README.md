@@ -1,1 +1,1 @@
-# ocr-sample-naver-clova
+ocr-sample-naver-clova
