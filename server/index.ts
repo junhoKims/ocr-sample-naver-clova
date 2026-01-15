@@ -8,32 +8,53 @@ const upload = multer()
 app.use(cors())
 app.use(express.json())
 
-const NAVER_OCR_API_URL = 'https://wwvo3sdeqd.apigw.ntruss.com/custom/v1/49424/dc99b139fa2b34dceaac1be1d1a0eee14cd40bd52b9deeebc9e9ece28e752cb0/general'
-const NAVER_OCR_SECRET = 'VkNra2ZyV1RzYkZVaXVnbkZZWE5qQWt1b3F1Z2dRdXo='
+// 여권 OCR API
+const NAVER_OCR_PASSPORT_API_URL = 'https://wwvo3sdeqd.apigw.ntruss.com/custom/v1/49443/a708e5cd9ca6dade2364bcf24da70dcae2ec794f506df269adf53df9867c6af7/infer/'
+const NAVER_OCR_PASSPORT_SECRET = 'REhYUk9Hc2pSVWZyTFRqTGxabnpMYlBEVEticXRkVnc='
 
-app.post('/api/ocr', upload.single('file'), async (req, res) => {
+// 운전면허증 OCR API
+const NAVER_OCR_LICENSE_API_URL = 'https://wwvo3sdeqd.apigw.ntruss.com/custom/v1/49446/d4bb9f337b11596dc68d58215f31bae84b70a2a3842cfc78f51d5115ebaf9306/infer/'
+const NAVER_OCR_LICENSE_SECRET = 'd29Zc3BIclZGcnBBc0ZFV0xpeFRXZ1BabkxjYnpJUEg='
+
+// 여권 OCR API
+app.post('/api/ocr-passport', upload.single('file'), async (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({ error: '이미지 파일이 필요합니다.' })
     }
 
-    const message = req.body.message
+    // 파일을 base64로 인코딩
+    const base64Image = req.file.buffer.toString('base64')
 
-    const formData = new FormData()
-    formData.append('message', message)
-    formData.append('file', new Blob([req.file.buffer], { type: req.file.mimetype }), req.file.originalname)
+    // 파일 확장자 추출
+    const fileExtension = req.file.originalname.split('.').pop()?.toLowerCase() || 'jpg'
 
-    const response = await fetch(NAVER_OCR_API_URL, {
+    // JSON body 생성 (샘플 코드 형식에 맞춤)
+    const requestBody = {
+      images: [
+        {
+          format: fileExtension,
+          name: req.file.originalname,
+          data: base64Image
+        }
+      ],
+      requestId: `req-${Date.now()}`,
+      timestamp: Date.now(),
+      version: 'V2'
+    }
+
+    const response = await fetch(NAVER_OCR_PASSPORT_API_URL, {
       method: 'POST',
       headers: {
-        'X-OCR-SECRET': NAVER_OCR_SECRET,
+        'Content-Type': 'application/json',
+        'X-OCR-SECRET': NAVER_OCR_PASSPORT_SECRET,
       },
-      body: formData,
+      body: JSON.stringify(requestBody),
     })
 
     if (!response.ok) {
       const errorText = await response.text()
-      console.error('Naver OCR API Error:', errorText)
+      console.error('Naver OCR API Error (Passport):', errorText)
       return res.status(response.status).json({
         error: `API 요청 실패: ${response.status} ${response.statusText}`,
         details: errorText
@@ -43,7 +64,63 @@ app.post('/api/ocr', upload.single('file'), async (req, res) => {
     const result = await response.json()
     res.json(result)
   } catch (error) {
-    console.error('Server Error:', error)
+    console.error('Server Error (Passport):', error)
+    res.status(500).json({
+      error: '서버 오류가 발생했습니다.',
+      details: error instanceof Error ? error.message : String(error)
+    })
+  }
+})
+
+// 운전면허증 OCR API
+app.post('/api/ocr-license', upload.single('file'), async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: '이미지 파일이 필요합니다.' })
+    }
+
+    // 파일을 base64로 인코딩
+    const base64Image = req.file.buffer.toString('base64')
+
+    // 파일 확장자 추출
+    const fileExtension = req.file.originalname.split('.').pop()?.toLowerCase() || 'jpg'
+
+    // JSON body 생성 (샘플 코드 형식에 맞춤)
+    const requestBody = {
+      images: [
+        {
+          format: fileExtension,
+          name: req.file.originalname,
+          data: base64Image
+        }
+      ],
+      requestId: `req-${Date.now()}`,
+      timestamp: Date.now(),
+      version: 'V2'
+    }
+
+    const response = await fetch(NAVER_OCR_LICENSE_API_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-OCR-SECRET': NAVER_OCR_LICENSE_SECRET,
+      },
+      body: JSON.stringify(requestBody),
+    })
+
+    if (!response.ok) {
+      const errorText = await response.text()
+      console.error('Naver OCR API Error (License):', errorText)
+      return res.status(response.status).json({
+        error: `API 요청 실패: ${response.status} ${response.statusText}`,
+        details: errorText
+      })
+    }
+
+    const result = await response.json()
+    res.json(result)
+  } catch (error) {
+    console.error('Server Error (License):', error)
     res.status(500).json({
       error: '서버 오류가 발생했습니다.',
       details: error instanceof Error ? error.message : String(error)

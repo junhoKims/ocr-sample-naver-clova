@@ -10,7 +10,10 @@ interface OCRResult {
   }[]
 }
 
+type DocumentType = 'passport' | 'license'
+
 function App() {
+  const [documentType, setDocumentType] = useState<DocumentType>('passport')
   const [selectedImage, setSelectedImage] = useState<string | null>(null)
   const [imageFile, setImageFile] = useState<File | null>(null)
   const [ocrResult, setOcrResult] = useState<OCRResult | null>(null)
@@ -57,7 +60,12 @@ function App() {
       formData.append('message', JSON.stringify(requestJson))
       formData.append('file', imageFile)
 
-      const response = await fetch('http://localhost:3001/api/ocr', {
+      // 문서 타입에 따라 다른 API 엔드포인트 사용
+      const apiEndpoint = documentType === 'passport'
+        ? 'http://localhost:3001/api/ocr-passport'
+        : 'http://localhost:3001/api/ocr-license'
+
+      const response = await fetch(apiEndpoint, {
         method: 'POST',
         body: formData,
       })
@@ -82,10 +90,51 @@ function App() {
     <div className="min-h-screen bg-gray-50 py-8 px-4">
       <div className="max-w-4xl mx-auto">
         <h1 className="text-4xl font-bold text-gray-900 mb-8 text-center">
-          Naver OCR Clova 이미지 텍스트 추출
+          대만 문서 OCR 텍스트 추출
         </h1>
 
         <div className="bg-white rounded-lg shadow-lg p-8">
+          {/* 문서 타입 선택 */}
+          <div className="mb-6">
+            <label className="block text-sm font-medium text-gray-700 mb-3">
+              문서 타입 선택
+            </label>
+            <div className="flex gap-4">
+              <button
+                onClick={() => {
+                  setDocumentType('passport')
+                  setSelectedImage(null)
+                  setImageFile(null)
+                  setOcrResult(null)
+                  setError(null)
+                }}
+                className={`flex-1 py-3 px-6 rounded-lg font-medium transition-all ${
+                  documentType === 'passport'
+                    ? 'bg-blue-600 text-white shadow-lg'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                여권
+              </button>
+              <button
+                onClick={() => {
+                  setDocumentType('license')
+                  setSelectedImage(null)
+                  setImageFile(null)
+                  setOcrResult(null)
+                  setError(null)
+                }}
+                className={`flex-1 py-3 px-6 rounded-lg font-medium transition-all ${
+                  documentType === 'license'
+                    ? 'bg-blue-600 text-white shadow-lg'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                운전면허증
+              </button>
+            </div>
+          </div>
+
           {/* 이미지 업로드 영역 */}
           <div className="mb-6">
             <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -128,7 +177,9 @@ function App() {
               disabled={!selectedImage || loading}
               className="bg-green-600 hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-medium py-3 px-8 rounded-lg transition-colors text-lg"
             >
-              {loading ? '분석 중...' : '텍스트 추출하기'}
+              {loading
+                ? '분석 중...'
+                : `${documentType === 'passport' ? '여권' : '운전면허증'} 텍스트 추출하기`}
             </button>
           </div>
 
