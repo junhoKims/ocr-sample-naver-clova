@@ -60,10 +60,16 @@ function App() {
       formData.append('message', JSON.stringify(requestJson))
       formData.append('file', imageFile)
 
+      // 환경에 따라 API URL 자동 설정
+      const isDevelopment = import.meta.env.DEV
+      const baseUrl = isDevelopment ? 'http://localhost:3001' : ''
+
       // 문서 타입에 따라 다른 API 엔드포인트 사용
-      const apiEndpoint = documentType === 'passport'
-        ? 'http://localhost:3001/api/ocr-passport'
-        : 'http://localhost:3001/api/ocr-license'
+      const apiPath = documentType === 'passport'
+        ? '/api/ocr-passport'
+        : '/api/ocr-license'
+
+      const apiEndpoint = `${baseUrl}${apiPath}`
 
       const response = await fetch(apiEndpoint, {
         method: 'POST',

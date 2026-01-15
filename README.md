@@ -1,9 +1,10 @@
-# Naver OCR Clova 이미지 텍스트 추출
+# 대만 문서 OCR 텍스트 추출
 
-Naver Clova OCR API를 사용하여 이미지에서 텍스트를 추출하는 웹 애플리케이션입니다.
+Naver Clova OCR API를 사용하여 대만 여권과 운전면허증에서 텍스트를 추출하는 웹 애플리케이션입니다.
 
 ## 기능
 
+- 문서 타입 선택 (여권 / 운전면허증)
 - 이미지 파일 업로드 및 미리보기
 - Naver Clova OCR API를 통한 텍스트 추출
 - 추출된 텍스트의 신뢰도 표시
@@ -13,8 +14,8 @@ Naver Clova OCR API를 사용하여 이미지에서 텍스트를 추출하는 �
 ## 기술 스택
 
 - **Frontend**: React 19, TypeScript, Vite, Tailwind CSS
-- **Backend**: Express, Node.js, TypeScript
-- **API**: Naver Clova OCR
+- **Backend**: Vercel Serverless Functions
+- **API**: Naver Clova OCR (여권 & 운전면허증)
 
 ## 프로젝트 구조
 
@@ -24,8 +25,12 @@ ocr-sample-naver-clova/
 │   ├── App.tsx          # 메인 애플리케이션 컴포넌트
 │   ├── main.tsx         # React 진입점
 │   └── index.css        # Tailwind CSS 스타일
+├── api/
+│   ├── ocr-passport.ts  # 여권 OCR Serverless Function
+│   └── ocr-license.ts   # 운전면허증 OCR Serverless Function
 ├── server/
-│   └── index.ts         # Express 프록시 서버 (CORS 해결용)
+│   └── index.ts         # 로컬 개발용 Express 서버
+├── vercel.json          # Vercel 배포 설정
 └── package.json
 ```
 
@@ -63,13 +68,14 @@ pnpm run dev
 
 ## 사용 방법
 
-1. "이미지 선택" 버튼을 클릭하여 텍스트가 포함된 이미지를 선택합니다.
-2. 선택한 이미지의 미리보기가 표시됩니다.
-3. "텍스트 추출하기" 버튼을 클릭합니다.
-4. OCR 결과가 표시됩니다:
+1. 문서 타입을 선택합니다 (여권 또는 운전면허증)
+2. "이미지 선택" 버튼을 클릭하여 해당 문서 이미지를 선택합니다.
+3. 선택한 이미지의 미리보기가 표시됩니다.
+4. "텍스트 추출하기" 버튼을 클릭합니다.
+5. OCR 결과가 표시됩니다:
    - 각 필드별 텍스트와 신뢰도
    - 전체 텍스트 통합 보기
-5. "텍스트 복사하기" 버튼으로 추출된 텍스트를 클립보드에 복사할 수 있습니다.
+6. "텍스트 복사하기" 버튼으로 추출된 텍스트를 클립보드에 복사할 수 있습니다.
 
 ## 빌드
 
@@ -81,12 +87,27 @@ pnpm run build
 
 빌드된 파일은 `dist/` 디렉토리에 생성됩니다.
 
-## CORS 문제 해결
+## Vercel 배포
 
-이 프로젝트는 Naver OCR API의 CORS 제한을 우회하기 위해 Express 백엔드 프록시 서버를 사용합니다.
+이 프로젝트는 Vercel에 배포할 수 있습니다. 자세한 배포 가이드는 [VERCEL_DEPLOYMENT.md](./VERCEL_DEPLOYMENT.md)를 참고하세요.
 
-- 프론트엔드 → 백엔드 프록시 (`localhost:3001`) → Naver OCR API
-- 백엔드 서버에서 CORS 헤더를 설정하여 프론트엔드의 요청을 허용합니다.
+### 빠른 배포 가이드
+
+1. Vercel에 프로젝트 연결
+2. 환경 변수 설정 (API URL, Secret Keys)
+3. 배포
+
+## 개발 환경 vs 프로덕션 환경
+
+### 로컬 개발
+- 백엔드: Express 서버 (`server/index.ts`)
+- API URL: `http://localhost:3001/api/*`
+
+### Vercel 프로덕션
+- 백엔드: Serverless Functions (`api/*.ts`)
+- API URL: `/api/*` (상대 경로, 자동으로 Vercel 도메인 사용)
+
+프론트엔드는 환경을 자동으로 감지하여 적절한 API URL을 사용합니다.
 
 ## 라이선스
 
